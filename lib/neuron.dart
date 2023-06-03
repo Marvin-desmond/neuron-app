@@ -62,7 +62,6 @@ class Neuron {
       var result = await machineLearningChannel.invokeMethod(
           "getPredictions", arguments);
       var predictions = json.decode(result["predictions"]);
-      print(predictions);
       return result;
     } catch (e) {
       print("GET PREDICTIONS: $e");
