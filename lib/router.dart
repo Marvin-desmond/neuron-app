@@ -1,6 +1,6 @@
 import 'package:flutter_native/file_progress.dart';
 import 'package:flutter_native/global.dart';
-import 'package:flutter_native/model_catalog.dart';
+import 'package:flutter_native/catalog/model_catalog.dart';
 import 'package:flutter_native/test_screen.dart';
 import 'package:flutter_native/model_cards.dart';
 import 'package:flutter_native/playground/model_playground.dart';

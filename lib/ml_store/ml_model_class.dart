@@ -14,6 +14,17 @@ class Preprocessing {
       this.normalization = false,
       this.normMean = const [0.485, 0.456, 0.406],
       this.normStd = const [0.229, 0.224, 0.225]});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'inferenceSize': inferenceSize,
+      'scaling': scaling,
+      'permute': permute,
+      'normalization': normalization,
+      'normMean': normMean,
+      'normStd': normStd,
+    };
+  }
 }
 
 class MLModel {
@@ -21,12 +32,13 @@ class MLModel {
   final String url;
   final String tag;
   final FrameWork framework;
-  Preprocessing? preprocessing;
+  Preprocessing preprocessing;
   String? size;
   bool downloaded = false;
   String labels;
   MLModel(this.name, this.url, this.tag, this.framework, this.labels,
-      [this.preprocessing]);
+      [Preprocessing? preprocessing])
+      : preprocessing = preprocessing ?? Preprocessing();
 
   @override
   String toString() => "$name : $size";

@@ -3,7 +3,7 @@ import 'package:flutter_native/global.dart';
 final dio = Dio();
 final cancelToken = CancelToken();
 
-Future<String?> getStoragePath() async {
+Future<String> getStoragePath() async {
   Directory? storageDirectory = await getExternalStorageDirectory();
   return storageDirectory!.path;
 }
@@ -50,6 +50,16 @@ Future<bool> checkFileInLocal(File file, String? url) async {
   }
 }
 
+Future<bool> checkInternetConnection() async {
+  bool result = await InternetConnectionChecker().hasConnection;
+  return result;
+}
+
+Future<bool> checkFileInLocalOffline(File file) async {
+  bool exists = await file.exists();
+  return exists;
+}
+
 Future<int> getFileSizeInLocal(String name) async {
   String? storagePath = await getStoragePath();
   File file = File("$storagePath/$name");
@@ -71,7 +81,9 @@ Future<int> getFileSizeInRemote(String url) async {
 }
 
 String getSizeInMB(int size) {
-  return "${(size / pow(1024, 2)).toStringAsFixed(3)}MB";
+  double megaBytes = size / pow(1024, 2);
+  String megaBytesPrecision = megaBytes.toStringAsFixed(3);
+  return "${megaBytesPrecision}MB";
 }
 
 void getFileDownload(

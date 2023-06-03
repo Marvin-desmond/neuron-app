@@ -1,6 +1,8 @@
 import 'package:flutter_native/global.dart';
 import 'package:flutter_native/ml_store/ml_models.dart';
 import 'package:flutter_native/ml_store/ml_model_class.dart';
+import 'package:flutter_native/neuron.dart';
+import 'package:flutter_native/download_progress.dart';
 
 part 'model_upload.dart';
 part 'picture_upload.dart';
@@ -11,6 +13,7 @@ class ModelPlayground extends StatefulWidget {
   final String icon;
   final String tag;
   final String playground;
+
   const ModelPlayground(
       {super.key,
       required this.icon,
@@ -22,6 +25,35 @@ class ModelPlayground extends StatefulWidget {
 }
 
 class _ModelPlaygroundState extends State<ModelPlayground> {
+  XFile? pickedImage;
+  MLModel? playgroundModel;
+  late List<MLModel> models;
+  dynamic resultPredictions;
+
+  @override
+  void initState() {
+    super.initState();
+    models = mlModels;
+  }
+
+  void setImagePicked(XFile? image) {
+    setState(() {
+      pickedImage = image;
+    });
+  }
+
+  void setPlaygroundModel(MLModel model) {
+    setState(() {
+      playgroundModel = model;
+    });
+  }
+
+  void setPredictions(var modelPredictions) {
+    setState(() {
+      resultPredictions = modelPredictions;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -48,10 +80,22 @@ class _ModelPlaygroundState extends State<ModelPlayground> {
                 ),
                 child: Column(
                   children: [
-                    PictureUpload(widget: widget),
-                    ModelUpload(tag: widget.tag),
-                    const PictureRender(),
-                    const OutputRender()
+                    PictureUpload(
+                      widget: widget,
+                      setImagePicked: (x) => setImagePicked(x),
+                    ),
+                    ModelUpload(
+                      tag: widget.tag,
+                      setPlaygroundModel: (x) => setPlaygroundModel(x),
+                    ),
+                    PictureRender(
+                      pickedImage: pickedImage,
+                      model: playgroundModel,
+                      setPredictions: (x) => setPredictions(x),
+                    ),
+                    OutputRender(
+                      resultPredictions: resultPredictions,
+                    )
                   ],
                 ),
               ),

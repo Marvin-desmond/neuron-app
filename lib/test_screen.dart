@@ -71,8 +71,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _getBatteryLevel() async {
     String batteryLevel;
     try {
-      final int result = await batteryChannel.invokeMethod('getBatteryLevel');
-      batteryLevel = 'Battery level at $result % .';
+      // final int result = await batteryChannel.invokeMethod('getBatteryLevel');
+      batteryLevel = 'Battery level at test % .';
     } on PlatformException catch (e) {
       batteryLevel = "Failed to get battery level: '${e.message}'.";
     }

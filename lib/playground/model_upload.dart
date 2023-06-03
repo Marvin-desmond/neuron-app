@@ -1,11 +1,11 @@
 part of 'model_playground.dart';
 
 class ModelUpload extends StatefulWidget {
-  const ModelUpload({
-    Key? key,
-    this.tag = "classification",
-  }) : super(key: key);
+  const ModelUpload(
+      {Key? key, this.tag = "classification", required this.setPlaygroundModel})
+      : super(key: key);
   final String tag;
+  final Function(MLModel) setPlaygroundModel;
 
   @override
   State<ModelUpload> createState() => _ModelUploadState();
@@ -16,6 +16,7 @@ class _ModelUploadState extends State<ModelUpload> {
       ValueNotifier<FrameWork>(FrameWork.tensorflow);
   List<MLModel> cardModels = [];
   List<MLModel> frameworkModels = [];
+  MLModel? activeModel;
 
   @override
   void initState() {
@@ -31,6 +32,43 @@ class _ModelUploadState extends State<ModelUpload> {
     var filteredModels =
         cardModels.where((i) => i.framework == frameWork.value).toList();
     return filteredModels;
+  }
+
+  void unsetActiveModel() {
+    try {
+      if (activeModel != null) {
+        Neuron.fromAsset(activeModel!.name, activeModel!.framework.name)
+            .then((result) {
+          if (result["status"] == 200) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final BuildContext context = this.context;
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              final snackBar = SnackBar(
+                content: const Text("Successfully configured model!"),
+                action: SnackBarAction(
+                  label: 'Undo',
+                  onPressed: () {},
+                ),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            });
+          }
+        }).then((_) => {
+                  setState(() {
+                    activeModel = null;
+                  })
+                });
+      }
+    } catch (e) {
+      print("FINALLY UNSET ERROR: $e");
+    }
+  }
+
+  void setActiveModel(MLModel model) {
+    setState(() {
+      activeModel = model;
+    });
+    widget.setPlaygroundModel(model);
   }
 
   @override
@@ -158,7 +196,12 @@ class _ModelUploadState extends State<ModelUpload> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     frameworkModels.isNotEmpty
-                        ? DropdownModels(modelOptions: frameworkModels)
+                        ? DropdownModels(
+                            modelOptions: frameworkModels,
+                            setActiveModel: (x) => setActiveModel(x),
+                            setPlaygroundModel: (x) =>
+                                widget.setPlaygroundModel(x),
+                          )
                         : const SizedBox.shrink(),
                     TextButton.icon(
                         onPressed: () => {
@@ -178,6 +221,13 @@ class _ModelUploadState extends State<ModelUpload> {
                   ],
                 ),
               ),
+              activeModel != null
+                  ? DownloadProgress(
+                      name: activeModel!.name,
+                      url: activeModel!.url,
+                      closeProgress: () => unsetActiveModel(),
+                    )
+                  : const SizedBox.shrink()
             ]),
           );
         });
@@ -186,7 +236,13 @@ class _ModelUploadState extends State<ModelUpload> {
 
 class DropdownModels extends StatefulWidget {
   final List<MLModel> modelOptions;
-  const DropdownModels({super.key, this.modelOptions = const []});
+  final Function(MLModel) setActiveModel;
+  final Function(MLModel) setPlaygroundModel;
+  const DropdownModels(
+      {super.key,
+      this.modelOptions = const [],
+      required this.setActiveModel,
+      required this.setPlaygroundModel});
 
   @override
   State<DropdownModels> createState() => _DropdownModelsState();
@@ -206,14 +262,13 @@ class _DropdownModelsState extends State<DropdownModels> {
   @override
   void didUpdateWidget(DropdownModels oldWidget) {
     super.didUpdateWidget(oldWidget);
-      if (!widget.modelOptions.contains(currentModel)) {
-        if (widget.modelOptions.isNotEmpty) {
-          currentModel = widget.modelOptions[0];
-        } else {
-          currentModel = null;
-        }
+    if (!widget.modelOptions.contains(currentModel)) {
+      if (widget.modelOptions.isNotEmpty) {
+        currentModel = widget.modelOptions[0];
+      } else {
+        currentModel = null;
       }
-
+    }
   }
 
   @override
@@ -231,22 +286,52 @@ class _DropdownModelsState extends State<DropdownModels> {
         height: 1,
         color: Colors.deepPurpleAccent,
       ),
-      onChanged: (MLModel? value) {
-        getRemoteFile(value!.name, value.url).then((result) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          final snackBar = SnackBar(
-            content: Text(result.message),
-            action: SnackBarAction(
-              label: 'Undo',
-              onPressed: () {},
-            ),
-          );
+      onChanged: (MLModel? value) async {
+        if (value != null) {
+          try {
+            getFileFromName(value.name).then((file) {
+              checkFileInLocal(file, value.url).then((exists) {
+                print("ASSERT EXISTS $exists");
+                if (exists) {
+                  Neuron.fromAsset(value.name, value.framework.name)
+                      .then((result) {
+                    if (result["status"] == 200) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      final snackBar = SnackBar(
+                        content: const Text("Successfully configured model!"),
+                        action: SnackBarAction(
+                          label: 'Undo',
+                          onPressed: () {},
+                        ),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      widget.setPlaygroundModel(value);
+                    }
+                  });
+                } else {
+                  getRemoteFile(value.name, value.url).then((result) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    final snackBar = SnackBar(
+                      content: Text(result.message),
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () {},
+                      ),
+                    );
 
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        });
-        setState(() {
-          currentModel = value;
-        });
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    widget.setActiveModel(value);
+                  });
+                }
+              });
+            });
+            setState(() {
+              currentModel = value;
+            });
+          } catch (e) {
+            print("Error on downloading/configuring selected model");
+          }
+        }
       },
       items:
           widget.modelOptions.map<DropdownMenuItem<MLModel>>((MLModel option) {

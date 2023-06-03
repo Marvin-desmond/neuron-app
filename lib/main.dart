@@ -6,4 +6,4 @@ void main() {
     title: 'Beginner ML',
     routerConfig: appRouter,
   ));
-}
+} 
