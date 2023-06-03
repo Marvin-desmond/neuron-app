@@ -29,7 +29,7 @@ List<MLModel> mlModels = [
       Preprocessing(permute: true, normalization: true)),
   MLModel(
       "yolo-5m-ptl.pt",
-      "https://github.com/Marvin-desmond/Spoon-Knife/releases/download/v1.0/yolo-m-lite.ptl",
+      "https://github.com/Marvin-desmond/Spoon-Knife/releases/download/v1.0/yolov5m.torchscript.ptl",
       "detection",
       FrameWork.pytorch,
       "coco",
