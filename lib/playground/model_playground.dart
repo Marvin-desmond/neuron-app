@@ -94,6 +94,8 @@ class _ModelPlaygroundState extends State<ModelPlayground> {
                       setPredictions: (x) => setPredictions(x),
                     ),
                     OutputRender(
+                      image: pickedImage,
+                      tag: widget.tag,
                       resultPredictions: resultPredictions,
                     )
                   ],

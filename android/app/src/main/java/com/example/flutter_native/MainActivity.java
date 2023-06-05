@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.FileWriter;
 // Get file buffer
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -270,16 +271,49 @@ public class MainActivity extends FlutterActivity {
               if (neuronModel instanceof Module) {
                 Tensor inputImage = getPreprocessedImageForPytorch(
                   bitmap,
-                  inferenceSize
+                  inferenceSize,
+                  scaling,
+                  permute,
+                  normalization,
+                  mean,
+                  std
                 );
                 Module model = (Module) neuronModel;
-                Tensor outputTensor = model
-                  .forward(IValue.from(inputImage))
-                  .toTensor();
+                ColoredLog(
+                  "PRINT INPUT PYTORCH: " +
+                  Arrays.toString(inputImage.shape()) +
+                  inputImage.getDataAsFloatArray().length
+                );
+                float[] dummy = { 1.0f, 2.0f, 3.0f };
+                Tensor outputTensor = Tensor.fromBlob(
+                  dummy,
+                  new long[] { 1, 3 }
+                );
+                try {
+                  outputTensor =
+                    model.forward(IValue.from(inputImage)).toTensor();
+                } catch (Exception e) {
+                  try {
+                    IValue[] outputTuple = model
+                      .forward(IValue.from(inputImage))
+                      .toTuple();
+                    outputTensor = outputTuple[0].toTensor();
+                  } catch (Exception f) {
+                    ColoredLog("Both classification and detection failed");
+                  }
+                }
                 float[] scores = outputTensor.getDataAsFloatArray();
                 if (imagenet == true) {
                   List<Prediction> postResults = postProcessor(scores, 5);
                   String jsonRes = gson.toJson(postResults);
+                  predictions.put("predictions", jsonRes);
+                } else if (tag.equals("detection")) {
+                  final ArrayList<Result> preds = PrePostProcessor.outputsToNMSPredictions(
+                    scores,
+                    height, 
+                    width
+                  );
+                  String jsonRes = gson.toJson(preds);
                   predictions.put("predictions", jsonRes);
                 } else {
                   String jsonRes = gson.toJson(scores);
@@ -309,15 +343,28 @@ public class MainActivity extends FlutterActivity {
                   inputImage.getBuffer(),
                   probabilityBuffer.getBuffer()
                 );
-                 float[] results = probabilityBuffer.getFloatArray();
+                float[] results = probabilityBuffer.getFloatArray();
                 if (imagenet == true) {
                   List<Prediction> postResults = postProcessor(results, 5);
                   String jsonRes = gson.toJson(postResults);
                   predictions.put("predictions", jsonRes);
-                } else if (tag == "detection"){
-                  float[][][] preds = PreprocessorUtils.reconstructPredictions(results);
-                  int[] shape = new int[]{preds.length, preds[0].length, preds[0][0].length};
-                  ColoredLog("Reconstructed shape: " + Arrays.toString(shape));
+                } else if (tag.equals("detection")) {
+                  float w = 640.0f;
+                  float h = 640.0f;
+
+                  for (int i = 0; i < results.length; i += 85) {
+                    results[i] *= w;
+                    results[i+1] *= h;
+                    results[i+2] *= w;
+                    results[i+3] *= h;
+                  }
+                  final ArrayList<Result> preds = PrePostProcessor.outputsToNMSPredictions(
+                    results,
+                    height, 
+                    width
+                  );
+                  String jsonRes = gson.toJson(preds);
+                  predictions.put("predictions", jsonRes);
                 } else {
                   String jsonRes = gson.toJson(results);
                   predictions.put("predictions", jsonRes);
@@ -382,51 +429,37 @@ public class MainActivity extends FlutterActivity {
 
   private Tensor getPreprocessedImageForPytorch(
     Bitmap bitmap,
-    int inferenceSize
-    /*boolean scaling, 
-        boolean permute, 
-        boolean normalization,
-        float[] mean,
-        float[] std */
+    int inferenceSize,
+    boolean scaling,
+    boolean permute,
+    boolean normalization,
+    float[] mean,
+    float[] std
   ) {
+    float[] no_mean = new float[] { 0.0f, 0.0f, 0.0f };
+    float[] no_std = new float[] { 1.0f, 1.0f, 1.0f };
     bitmap =
       PreprocessorUtils.resizeBitmap(bitmap, inferenceSize, inferenceSize);
-    /*
-            if (scaling) {
-                bitmap = PreprocessorUtils.scaleBitmapToOne(bitmap);
-            }
-            if (permute) {
-                bitmap = PreprocessorUtils.permuteChannels(bitmap);
-            }
-            if (normalization) {
-                bitmap = PreprocessorUtils.normalizeBitmap(
-                    bitmap, 
-                    mean,
-                    std
-                    );
-            }
-            */
     Tensor inputTensor = TensorImageUtils.bitmapToFloat32Tensor(
       bitmap,
-      TensorImageUtils.TORCHVISION_NORM_MEAN_RGB,
-      TensorImageUtils.TORCHVISION_NORM_STD_RGB
+      no_mean,
+      no_std
     );
+    ColoredLog("NORMALIZATION STATE: " + normalization);
+    if (normalization) {
+      inputTensor = TensorImageUtils.bitmapToFloat32Tensor(bitmap, mean, std);
+    } else {
+      ColoredLog("NO MEAN/STD NORMALIZATION");
+      ColoredLog(
+        "DATA IN REPRESENTATION: ==>" +
+        Arrays.toString(inputTensor.getDataAsFloatArray())
+      );
+    }
     return inputTensor;
   }
 
   private String getMachineVersion() {
     return "Serving of TensorFlow, topping of PyTorch";
-  }
-
-  private String _getAssetPath(String asset) throws IOException {
-    String filePath = "";
-    Context context = getApplicationContext();
-    File externalFilesDir = context.getExternalFilesDir(null);
-    File file = new File(externalFilesDir, asset);
-    if (file.exists() && file.length() > 0) {
-      filePath = file.getAbsolutePath();
-    }
-    return filePath;
   }
 
   private String getAssetPath(Context context, String asset)
@@ -447,27 +480,6 @@ public class MainActivity extends FlutterActivity {
         }
         return file.getAbsolutePath();
       }
-    }
-  }
-
-  private void getAssetPathArchive(Context context, String name)
-    throws IOException {
-    // Access the Android/data folder
-    File externalFilesDir = context.getExternalFilesDir(null);
-    // File dataFolder = new File(externalFilesDir, "data");
-    String dataFolderPath = externalFilesDir.getAbsolutePath();
-    ColoredLog("DATA FOLDER PATH: " + dataFolderPath);
-    // Perform operations with the data folder
-    if (externalFilesDir.exists()) {
-      File[] files = externalFilesDir.listFiles();
-      if (files != null) {
-        for (File file : files) {
-          String fileName = file.getName();
-          ColoredLog("DATA FILE: " + fileName);
-        }
-      }
-    } else {
-      ColoredLog("DATA FOLDER NOT FOUND");
     }
   }
 
