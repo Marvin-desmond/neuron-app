@@ -1,3 +1,5 @@
+import 'package:flutter_native/global.dart';
+
 enum FrameWork { tensorflow, pytorch }
 
 class Preprocessing {
@@ -42,4 +44,28 @@ class MLModel {
 
   @override
   String toString() => "$name : $size";
+}
+
+class Detection {
+  double top;
+  double left;
+  double bottom;
+  double right;
+  int classIndex;
+  double score;
+  Detection(
+      {required this.top,
+      required this.left,
+      required this.bottom,
+      required this.right,
+      required this.classIndex,
+      required this.score});
+
+  Detection.fromJson(Map<String, dynamic> json)
+      : top = json['top'],
+        left = json['left'],
+        bottom = json['bottom'],
+        right = json['right'],
+        classIndex = json['classIndex'],
+        score = json['score'];
 }

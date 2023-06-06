@@ -3,6 +3,8 @@ import 'package:flutter_native/ml_store/ml_models.dart';
 import 'package:flutter_native/ml_store/ml_model_class.dart';
 import 'package:flutter_native/neuron.dart';
 import 'package:flutter_native/download_progress.dart';
+import 'package:image/image.dart' as imgr;
+
 
 part 'model_upload.dart';
 part 'picture_upload.dart';

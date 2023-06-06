@@ -12,16 +12,11 @@ class OutputRender extends StatefulWidget {
 }
 
 class _OutputRenderState extends State<OutputRender> {
-  List<String> outputs = [
-    "ostrich, Struthio camelus",
-    "bustard",
-    "zebra",
-    "Border collie",
-    "African elephant, Loxodonta africana"
-  ];
+  final imageKey = GlobalKey();
+
   Map<int, double> processedPredictions = {};
   double totalSumOfPredictions = 0;
-  final imageKey = GlobalKey();
+  List<Detection>? processedDetections;
 
   @override
   void initState() {
@@ -43,7 +38,9 @@ class _OutputRenderState extends State<OutputRender> {
           });
           totalSumOfPredictions = totalSum;
         } else if (tag == "detection") {
-          processedPredictions = {0: 0.0};
+          Iterable mapPreds = jsonDecode(listPredictions);
+          processedDetections = List<Detection>.from(
+              mapPreds.map((pred) => Detection.fromJson(pred)));
         }
       });
     }
@@ -57,7 +54,32 @@ class _OutputRenderState extends State<OutputRender> {
       final RenderBox? renderBox =
           imageKey.currentContext?.findRenderObject() as RenderBox?;
       final imageSize = renderBox?.size;
-      print('IMAGE SIZE IN RENDER: $imageSize');
+
+      if (widget.image != null && processedDetections != null) {
+        final bytes = File(widget.image!.path).readAsBytesSync();
+        final imgr.Image? image = imgr.decodeImage(bytes);
+        if (image != null && imageSize != null) {
+          int initialHeight = image.height;
+          int initialWidth = image.width;
+          double finalHeight = imageSize.height;
+          double finalWidth = imageSize.width;
+          double hR = finalHeight / initialHeight;
+          double wR = finalWidth / initialWidth;
+          print(processedDetections
+              ?.toList()
+              .map((e) => '${e.top} ${e.left} ${e.bottom} ${e.right}'));
+
+          for (var detection in processedDetections!) {
+            detection.top = max(detection.top * hR, 0);
+            detection.left = max(detection.left * wR, 0);
+            detection.bottom = min(detection.bottom * hR, finalHeight);
+            detection.right = min(detection.right * wR, finalWidth);
+          }
+          print(processedDetections
+              ?.toList()
+              .map((e) => '${e.top} ${e.left} ${e.bottom} ${e.right}'));
+        }
+      }
     });
   }
 
@@ -139,11 +161,12 @@ class _OutputRenderState extends State<OutputRender> {
                 widget.tag == "detection"
                     ? Column(
                         children: [
-                          Container(
-                            color: Colors.red,
-                            child: CustomPaint(
-                              painter: BoundingBoxPainter(),
-                              child: Image.file(
+                          Stack(
+                            children: [
+                              CustomPaint(
+                                painter: BoundingBoxPainter(),
+                              ),
+                              Image.file(
                                 key: imageKey,
                                 File(widget.image!.path),
                                 errorBuilder: (BuildContext context,
@@ -151,10 +174,10 @@ class _OutputRenderState extends State<OutputRender> {
                                     const Center(
                                         child: Text(
                                             'This image type is not supported')),
-                              ),
-                            ),
+                              )
+                            ],
                           ),
-                          Text(widget.resultPredictions["predictions"])
+                          Text(widget.resultPredictions["predictions"]),
                         ],
                       )
                     : const SizedBox.shrink(),
