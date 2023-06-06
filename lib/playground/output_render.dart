@@ -17,6 +17,7 @@ class _OutputRenderState extends State<OutputRender> {
   Map<int, double> processedPredictions = {};
   double totalSumOfPredictions = 0;
   List<Detection>? processedDetections;
+  List<Detection>? processedNextDetections;
 
   @override
   void initState() {
@@ -68,13 +69,17 @@ class _OutputRenderState extends State<OutputRender> {
           print(processedDetections
               ?.toList()
               .map((e) => '${e.top} ${e.left} ${e.bottom} ${e.right}'));
-
+          List<Detection> updatedDetections = [];
           for (var detection in processedDetections!) {
-            detection.top = max(detection.top * hR, 0);
-            detection.left = max(detection.left * wR, 0);
-            detection.bottom = min(detection.bottom * hR, finalHeight);
-            detection.right = min(detection.right * wR, finalWidth);
+            detection.top = max(detection.top * hR, 0).toInt();
+            detection.left = max(detection.left * wR, 0).toInt();
+            detection.bottom = min(detection.bottom * hR, finalHeight).toInt();
+            detection.right = min(detection.right * wR, finalWidth).toInt();
+            updatedDetections.add(detection);
           }
+          setState(() {
+            processedNextDetections = updatedDetections;
+          });
           print(processedDetections
               ?.toList()
               .map((e) => '${e.top} ${e.left} ${e.bottom} ${e.right}'));
@@ -94,7 +99,7 @@ class _OutputRenderState extends State<OutputRender> {
         border: Border.all(width: 1.0, color: const Color(0xFFF3F4F6)),
         color: const Color(0xFFFEFEFE),
       ),
-      child: processedPredictions.isNotEmpty
+      child: processedPredictions.isNotEmpty || processedDetections != null
           ? Column(
               children: [
                 widget.tag == "classification"
@@ -163,21 +168,37 @@ class _OutputRenderState extends State<OutputRender> {
                         children: [
                           Stack(
                             children: [
-                              CustomPaint(
-                                painter: BoundingBoxPainter(),
-                              ),
-                              Image.file(
-                                key: imageKey,
-                                File(widget.image!.path),
-                                errorBuilder: (BuildContext context,
-                                        Object error, StackTrace? stackTrace) =>
-                                    const Center(
-                                        child: Text(
-                                            'This image type is not supported')),
-                              )
+                              processedNextDetections != null
+                                  ? Stack(
+                                      children: [
+                                        Image.file(
+                                          key: imageKey,
+                                          File(widget.image!.path),
+                                          errorBuilder: (BuildContext context,
+                                                  Object error,
+                                                  StackTrace? stackTrace) =>
+                                              const Center(
+                                                  child: Text(
+                                                      'This image type is not supported')),
+                                        ),
+                                        CustomPaint(
+                                          painter: BoundingBoxPainter(
+                                              processedNextDetections!),
+                                        ),
+                                      ],
+                                    )
+                                  : const SizedBox.shrink(),
                             ],
                           ),
-                          Text(widget.resultPredictions["predictions"]),
+                          // Text(widget.resultPredictions["predictions"]),
+                          Text(processedNextDetections?.length.toString() ??
+                              "Null"),
+                          Text(processedNextDetections
+                                  ?.toList()
+                                  .map((e) =>
+                                      '${e.top} ${e.left} ${e.bottom} ${e.right}')
+                                  .toString() ??
+                              "no next"),
                         ],
                       )
                     : const SizedBox.shrink(),
@@ -189,23 +210,20 @@ class _OutputRenderState extends State<OutputRender> {
 }
 
 class BoundingBoxPainter extends CustomPainter {
-  final Rect boundingBox = const Rect.fromLTRB(
-    49.933782 * 0.766, // left
-    98.180176 * 0.766, // top
-    650.0859325 * 0.766, // right
-    648.882666 * 0.766, // bottom
-  );
+  List<Detection> boundingBoxes;
 
-  BoundingBoxPainter();
+  BoundingBoxPainter(this.boundingBoxes);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.green
+      ..color = Colors.red
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
-    canvas.drawRect(boundingBox, paint);
+    for (var boundingBox in boundingBoxes) {
+      canvas.drawRect(boundingBox.getRect(), paint);
+    }
   }
 
   @override

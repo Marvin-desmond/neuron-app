@@ -47,10 +47,10 @@ class MLModel {
 }
 
 class Detection {
-  double top;
-  double left;
-  double bottom;
-  double right;
+  num top;
+  num left;
+  num bottom;
+  num right;
   int classIndex;
   double score;
   Detection(
@@ -68,4 +68,9 @@ class Detection {
         right = json['right'],
         classIndex = json['classIndex'],
         score = json['score'];
+        
+  Rect getRect() {
+    return Rect.fromLTRB(
+        left.toDouble(), top.toDouble(), right.toDouble(), bottom.toDouble());
+  }
 }

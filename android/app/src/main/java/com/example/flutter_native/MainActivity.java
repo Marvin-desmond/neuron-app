@@ -11,6 +11,8 @@ import com.google.gson.Gson;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.StandardMethodCodec;
 // Java IO for reading Model
 import java.io.File;
 import java.io.FileOutputStream;
@@ -54,10 +56,15 @@ public class MainActivity extends FlutterActivity {
   @Override
   public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
     super.configureFlutterEngine(flutterEngine);
+    BinaryMessenger messenger = flutterEngine.getDartExecutor().getBinaryMessenger();
+    BinaryMessenger.TaskQueue taskQueue =
+        messenger.makeBackgroundTaskQueue();
 
     new MethodChannel(
-      flutterEngine.getDartExecutor().getBinaryMessenger(),
-      CHANNEL_ML
+      messenger,
+      CHANNEL_ML,
+      StandardMethodCodec.INSTANCE,
+      taskQueue
     )
     .setMethodCallHandler(
         (call, result) -> {

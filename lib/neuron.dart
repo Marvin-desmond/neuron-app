@@ -1,7 +1,6 @@
 import 'package:flutter_native/global.dart';
 import 'package:flutter_native/ml_store/ml_model_class.dart';
 import 'package:image/image.dart' as imgr;
-import 'dart:ui' as ui;
 
 class Neuron {
   static const machineLearningChannel =
@@ -61,8 +60,8 @@ class Neuron {
       };
       var result = await machineLearningChannel.invokeMethod(
           "getPredictions", arguments);
-      // var predictions = json.decode(result["predictions"]);
-      // print("LAST OF PREDICTIONS: $predictions");
+      var predictions = json.decode(result["predictions"]);
+      print("LAST OF PREDICTIONS: $predictions");
       return result;
     } catch (e) {
       print("GET PREDICTIONS: $e");
