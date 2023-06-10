@@ -1,15 +1,14 @@
 import 'package:flutter_native/global.dart';
-import 'package:flutter_native/router.dart';
 
 class ModelCards extends StatelessWidget {
   ModelCards({super.key});
 
   final List<InputCard> cards = [
-    InputCard("assets/cards/classification.png", "Image Classification", "classification"),
+    InputCard("assets/cards/classification.png", "Image Classification",
+        "classification"),
     InputCard("assets/cards/detection.png", "Image Detection", "detection"),
-    InputCard("assets/cards/segmentation.png", "Image Segmentation", "segmentation"),
-    InputCard("assets/cards/classification.png", "Image Classification", "classification"),
-    InputCard("assets/cards/segmentation.png", "Image Segmentation", "segmentation")
+    InputCard(
+        "assets/cards/segmentation.png", "Image Segmentation", "segmentation")
   ];
 
   @override
