@@ -80,12 +80,6 @@ class ModelCards extends StatelessWidget {
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            context.pop();
-          },
-          child: const Icon(Icons.skip_previous),
-        ),
       ),
     );
   }
