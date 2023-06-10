@@ -49,20 +49,23 @@ class _PictureRenderState extends State<PictureRender> {
                 child: InkWell(
                   splashColor: Colors.blue[200],
                   onTap: () async {
-                    if (widget.pickedImage != null) {
-                      if (widget.model != null) {
-                        var res = await Neuron.getPredictions(
-                            widget.pickedImage!,
-                            widget.model!.preprocessing,
-                            widget.model!.tag,
-                            imagenet: false);
-                        widget.setPredictions(res);
-                        // print(res);
+                    try {
+                      if (widget.pickedImage != null) {
+                        if (widget.model != null) {
+                          var res = await Neuron.getPredictions(
+                              widget.pickedImage!,
+                              widget.model!.preprocessing,
+                              widget.model!.tag,
+                              imagenet: false);
+                          widget.setPredictions(res);
+                        } else {
+                          print("Model not selected");
+                        }
                       } else {
-                        print("Model not selected");
+                        print("Image not picked!");
                       }
-                    } else {
-                      print("Image not picked!");
+                    } catch (e) {
+                      print("Error in predictions!");
                     }
                   },
                   child: const SizedBox(
