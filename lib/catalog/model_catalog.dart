@@ -102,6 +102,19 @@ class _ModelsInfoCatalogState extends State<ModelsInfoCatalog> {
       var url = modelsInfoCatalog[i].url;
 
       try {
+        bool internetAvailable = await checkInternetConnection();
+        if (!internetAvailable) {
+          File file = await getFileFromName(name);
+          bool exists = await checkFileInLocalOffline(file);
+          if (!exists) {
+            modelsInfoCatalog[i].size = ".....MB";
+          } else {
+            int size = await getFileSizeInLocal(name);
+            modelsInfoCatalog[i].size = getSizeInMB(size);
+            modelsInfoCatalog[i].downloaded = true;
+          }
+          return;
+        }
         await getFileSizeInRemote(url).then((size) {
           if (!_mounted) {
             return;
