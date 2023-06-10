@@ -23,6 +23,7 @@ class _ModelInfoState extends State<ModelInfo> {
   void initState() {
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -74,141 +75,118 @@ class _ModelInfoState extends State<ModelInfo> {
                       style: const TextStyle(
                           fontFamily: "IBMPlexMono", fontSize: 16.0),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Row(
-                        children: [
-                          widget.mlModel.downloaded
-                              ? IconButton(
-                                  onPressed: () {
-                                    Neuron.fromAsset(widget.mlModel.name,
-                                        widget.mlModel.framework.name);
-                                  },
-                                  icon: const Icon(
-                                    Icons.play_arrow,
-                                    color: Colors.blue,
-                                  ))
-                              : const SizedBox.shrink(),
-                          widget.mlModel.downloaded
-                              ? IconButton(
-                                  hoverColor: Colors.grey[100],
-                                  focusColor: Colors.grey[100],
-                                  onPressed: () => showDialog<String>(
-                                        context: context,
-                                        builder: (BuildContext context) =>
-                                            Theme(
-                                          data: ThemeData(
-                                              colorSchemeSeed:
-                                                  const Color(0xff6750a4),
-                                              useMaterial3: true),
-                                          child: AlertDialog(
-                                            title: Row(
-                                              children: [
-                                                Image.asset(
-                                                    "assets/core/${widget.mlModel.framework.name}.png",
-                                                    width: 25.0,
-                                                    height: 25.0),
-                                                const SizedBox(
-                                                  width: 5,
-                                                ),
-                                                Text(
-                                                  widget.mlModel.name,
-                                                  style: const TextStyle(
-                                                      fontSize: 18.0,
-                                                      fontFamily:
-                                                          'SourceSansPro',
-                                                      fontWeight:
-                                                          FontWeight.w300),
-                                                ),
-                                              ],
-                                            ),
-                                            content: Text(
-                                                'Confirm deleting ${widget.mlModel.name}?'),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(
-                                                    context, 'Cancel'),
-                                                child: const Text('Cancel'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context, 'OK');
-                                                  deleteFileInLocal(
-                                                          widget.mlModel.name)
-                                                      .then((_) {
-                                                    widget
-                                                        .updateData()
-                                                        .catchError((e) {
-                                                      print("STACK ERROR: $e");
-                                                    });
-                                                  });
-                                                },
-                                                child: const Text('OK'),
-                                              ),
-                                            ],
+                    widget.mlModel.downloaded
+                        ? IconButton(
+                            hoverColor: Colors.grey[100],
+                            focusColor: Colors.grey[100],
+                            onPressed: () => showDialog<String>(
+                                  context: context,
+                                  builder: (BuildContext context) => Theme(
+                                    data: ThemeData(
+                                        colorSchemeSeed:
+                                            const Color(0xff6750a4),
+                                        useMaterial3: true),
+                                    child: AlertDialog(
+                                      title: Row(
+                                        children: [
+                                          Image.asset(
+                                              "assets/core/${widget.mlModel.framework.name}.png",
+                                              width: 25.0,
+                                              height: 25.0),
+                                          const SizedBox(
+                                            width: 5,
                                           ),
-                                        ),
-                                      ),
-                                  icon: Icon(
-                                    Icons.delete,
-                                    color: Colors.grey[700],
-                                  ))
-                              : IconButton(
-                                  hoverColor: Colors.grey[100],
-                                  focusColor: Colors.grey[100],
-                                  icon: Icon(Icons.download,
-                                      color: Colors.grey[700]),
-                                  tooltip: 'Download',
-                                  onPressed: () => showDialog<String>(
-                                    context: context,
-                                    builder: (BuildContext context) => Theme(
-                                      data: ThemeData(
-                                          colorSchemeSeed:
-                                              const Color(0xff6750a4),
-                                          useMaterial3: true),
-                                      child: AlertDialog(
-                                        title: Row(
-                                          children: [
-                                            Image.asset(
-                                                "assets/core/${widget.mlModel.framework.name}.png",
-                                                width: 25.0,
-                                                height: 25.0),
-                                            const SizedBox(
-                                              width: 5,
-                                            ),
-                                            Text(
-                                              widget.mlModel.name,
-                                              style: const TextStyle(
-                                                  fontSize: 18.0,
-                                                  fontFamily: 'SourceSansPro',
-                                                  fontWeight: FontWeight.w300),
-                                            ),
-                                          ],
-                                        ),
-                                        content: Text(
-                                            'Do you want to download ${widget.mlModel.name} (${widget.mlModel.size}) for ${widget.mlModel.tag} tasks?'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(
-                                                context, 'Cancel'),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              widget.setActiveModel(
-                                                  widget.mlModel.name);
-                                              Navigator.pop(context, 'OK');
-                                            },
-                                            child: const Text('OK'),
+                                          Text(
+                                            widget.mlModel.name,
+                                            style: const TextStyle(
+                                                fontSize: 18.0,
+                                                fontFamily: 'SourceSansPro',
+                                                fontWeight: FontWeight.w300),
                                           ),
                                         ],
                                       ),
+                                      content: Text(
+                                          'Confirm deleting ${widget.mlModel.name}?'),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, 'Cancel'),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context, 'OK');
+                                            deleteFileInLocal(
+                                                    widget.mlModel.name)
+                                                .then((_) {
+                                              widget
+                                                  .updateData()
+                                                  .catchError((e) {
+                                                print("STACK ERROR: $e");
+                                              });
+                                            });
+                                          },
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                        ],
-                      ),
-                    )
+                            icon: Icon(
+                              Icons.delete,
+                              color: Colors.grey[700],
+                            ))
+                        : IconButton(
+                            hoverColor: Colors.grey[100],
+                            focusColor: Colors.grey[100],
+                            icon: Icon(Icons.download, color: Colors.grey[700]),
+                            tooltip: 'Download',
+                            onPressed: () => showDialog<String>(
+                              context: context,
+                              builder: (BuildContext context) => Theme(
+                                data: ThemeData(
+                                    colorSchemeSeed: const Color(0xff6750a4),
+                                    useMaterial3: true),
+                                child: AlertDialog(
+                                  title: Row(
+                                    children: [
+                                      Image.asset(
+                                          "assets/core/${widget.mlModel.framework.name}.png",
+                                          width: 25.0,
+                                          height: 25.0),
+                                      const SizedBox(
+                                        width: 5,
+                                      ),
+                                      Text(
+                                        widget.mlModel.name,
+                                        style: const TextStyle(
+                                            fontSize: 18.0,
+                                            fontFamily: 'SourceSansPro',
+                                            fontWeight: FontWeight.w300),
+                                      ),
+                                    ],
+                                  ),
+                                  content: Text(
+                                      'Do you want to download ${widget.mlModel.name} (${widget.mlModel.size}) for ${widget.mlModel.tag} tasks?'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'Cancel'),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        widget.setActiveModel(
+                                            widget.mlModel.name);
+                                        Navigator.pop(context, 'OK');
+                                      },
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
                   ],
                 )
               ],
