@@ -66,9 +66,6 @@ class _OutputRenderState extends State<OutputRender> {
           double finalWidth = imageSize.width;
           double hR = finalHeight / initialHeight;
           double wR = finalWidth / initialWidth;
-          print(processedDetections
-              ?.toList()
-              .map((e) => '${e.top} ${e.left} ${e.bottom} ${e.right}'));
           List<Detection> updatedDetections = [];
           for (var detection in processedDetections!) {
             detection.top = max(detection.top * hR, 0).toInt();
@@ -80,9 +77,6 @@ class _OutputRenderState extends State<OutputRender> {
           setState(() {
             processedNextDetections = updatedDetections;
           });
-          print(processedDetections
-              ?.toList()
-              .map((e) => '${e.top} ${e.left} ${e.bottom} ${e.right}'));
         }
       }
     });
@@ -168,7 +162,7 @@ class _OutputRenderState extends State<OutputRender> {
                         children: [
                           Stack(
                             children: [
-                              processedNextDetections != null
+                              processedDetections != null
                                   ? Stack(
                                       children: [
                                         Image.file(
@@ -183,7 +177,7 @@ class _OutputRenderState extends State<OutputRender> {
                                         ),
                                         CustomPaint(
                                           painter: BoundingBoxPainter(
-                                              processedNextDetections!),
+                                              processedNextDetections),
                                         ),
                                       ],
                                     )
@@ -210,7 +204,7 @@ class _OutputRenderState extends State<OutputRender> {
 }
 
 class BoundingBoxPainter extends CustomPainter {
-  List<Detection> boundingBoxes;
+  List<Detection>? boundingBoxes;
 
   BoundingBoxPainter(this.boundingBoxes);
 
@@ -220,9 +214,26 @@ class BoundingBoxPainter extends CustomPainter {
       ..color = Colors.red
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
-
-    for (var boundingBox in boundingBoxes) {
-      canvas.drawRect(boundingBox.getRect(), paint);
+    if (boundingBoxes != null) {
+      for (var boundingBox in boundingBoxes!) {
+        canvas.drawRect(boundingBox.getRect(), paint);
+        // text
+        final textSpan = TextSpan(
+          text: Coco.classes[boundingBox.classIndex],
+          style: const TextStyle(
+              fontSize: 14.0, color: Colors.red, fontWeight: FontWeight.bold),
+        );
+        final textPainter = TextPainter(
+          text: textSpan,
+          textAlign: TextAlign.left,
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        final offsetX = boundingBox.left.toDouble();
+        final offsetY = boundingBox.top - textPainter.height - 2;
+        textPainter.paint(canvas, Offset(offsetX, offsetY));
+        // end text
+      }
     }
   }
 
