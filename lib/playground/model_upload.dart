@@ -46,7 +46,7 @@ class _ModelUploadState extends State<ModelUpload> {
               final snackBar = SnackBar(
                 content: const Text("Successfully configured model!"),
                 action: SnackBarAction(
-                  label: 'Undo',
+                  label: 'Close',
                   onPressed: () {},
                 ),
               );
@@ -290,46 +290,102 @@ class _DropdownModelsState extends State<DropdownModels> {
         if (value != null) {
           try {
             getFileFromName(value.name).then((file) {
-              checkFileInLocal(file, value.url).then((exists) {
-                print("ASSERT EXISTS $exists");
-                if (exists) {
-                  Neuron.fromAsset(value.name, value.framework.name)
-                      .then((result) {
-                    if (result["status"] == 200) {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      final snackBar = SnackBar(
-                        content: const Text("Successfully configured model!"),
-                        action: SnackBarAction(
-                          label: 'Undo',
-                          onPressed: () {},
-                        ),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                      widget.setPlaygroundModel(value);
-                    }
-                  });
-                } else {
-                  getRemoteFile(value.name, value.url).then((result) {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    final snackBar = SnackBar(
-                      content: Text(result.message),
-                      action: SnackBarAction(
-                        label: 'Undo',
-                        onPressed: () {},
-                      ),
-                    );
+              checkInternetConnection().then((internetAvailable) => {
+                    if (internetAvailable)
+                      {
+                        checkFileInLocal(file, value.url).then((exists) {
+                          if (exists) {
+                            Neuron.fromAsset(value.name, value.framework.name)
+                                .then((result) {
+                              if (result["status"] == 200) {
+                                ScaffoldMessenger.of(context)
+                                    .hideCurrentSnackBar();
+                                final snackBar = SnackBar(
+                                  content: const Text(
+                                      "Successfully configured model!"),
+                                  action: SnackBarAction(
+                                    label: 'Close',
+                                    onPressed: () {},
+                                  ),
+                                );
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(snackBar);
+                                widget.setPlaygroundModel(value);
+                              }
+                            });
+                          } else {
+                            getRemoteFile(value.name, value.url).then((result) {
+                              ScaffoldMessenger.of(context)
+                                  .hideCurrentSnackBar();
+                              final snackBar = SnackBar(
+                                content: Text(result.message),
+                                action: SnackBarAction(
+                                  label: 'Close',
+                                  onPressed: () {},
+                                ),
+                              );
 
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    widget.setActiveModel(value);
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(snackBar);
+                              widget.setActiveModel(value);
+                            });
+                          }
+                        })
+                      }
+                    else
+                      {
+                        checkFileInLocalOffline(file).then((exists) {
+                          if (!exists) {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            final snackBar = SnackBar(
+                              content: const Text(
+                                  "Model not yet downloaded for offline access"),
+                              action: SnackBarAction(
+                                label: 'Close',
+                                onPressed: () {},
+                              ),
+                            );
+
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(snackBar);
+                            return;
+                          }
+                          Neuron.fromAsset(value.name, value.framework.name)
+                              .then((result) {
+                            if (result["status"] == 200) {
+                              ScaffoldMessenger.of(context)
+                                  .hideCurrentSnackBar();
+                              final snackBar = SnackBar(
+                                content: const Text(
+                                    "Successfully configured model!"),
+                                action: SnackBarAction(
+                                  label: 'Close',
+                                  onPressed: () {},
+                                ),
+                              );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(snackBar);
+                              widget.setPlaygroundModel(value);
+                            }
+                          });
+                        })
+                      }
                   });
-                }
-              });
             });
             setState(() {
               currentModel = value;
             });
           } catch (e) {
-            print("Error on downloading/configuring selected model");
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            final snackBar = SnackBar(
+              content:
+                  const Text("Error on downloading/configuring selected model"),
+              action: SnackBarAction(
+                label: 'Close',
+                onPressed: () {},
+              ),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
           }
         }
       },
