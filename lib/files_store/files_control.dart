@@ -36,9 +36,14 @@ Future<bool> checkFileComplete(File file, String url) async {
 }
 
 Future<bool> checkFileInLocal(File file, String? url) async {
+  bool fileComplete = false;
   bool exists = await file.exists();
   if (exists && url != null) {
-    bool fileComplete = await checkFileComplete(file, url);
+    try {
+      fileComplete = await checkFileComplete(file, url);
+    } catch (e) {
+      return false;
+    }
     if (fileComplete) {
       return true;
     } else {
