@@ -18,4 +18,5 @@ export 'package:flutter_native/files_store/files_control.dart';
 export 'package:flutter_native/router.dart';
 
 export 'package:flutter_native/ml_utils/imagenet.dart';
+export 'package:flutter_native/ml_utils/coco.dart';
 export 'package:flutter_native/ml_utils/post_processor.dart';
