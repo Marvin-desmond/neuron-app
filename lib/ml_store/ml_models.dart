@@ -22,7 +22,7 @@ List<MLModel> mlModels = [
       Preprocessing(permute: true, normalization: true)),
   MLModel(
       "multi-axis-vit.pt",
-      "https://drive.google.com/uc?id=1i7l5G5-peQz5oL36dPbiXOwYwPwyfyqV",
+      "https://github.com/Marvin-desmond/neuron-models-tests/releases/download/v1.0.0/multiaxis-vision-transformer.ptl",
       "classification",
       FrameWork.pytorch,
       "imagenet",
@@ -36,7 +36,7 @@ List<MLModel> mlModels = [
       Preprocessing(inferenceSize: 640, permute: true)),
   MLModel(
       "yolo-5m-tf.tflite",
-      "https://github.com/Marvin-desmond/Spoon-Knife/releases/download/v1.0/yolov5m-fp16.tflite",
+      "https://github.com/Marvin-desmond/neuron-models-tests/releases/download/v1.0.0/yolov5m-fp16.tflite",
       "detection",
       FrameWork.tensorflow,
       "coco",
