@@ -5,7 +5,7 @@
 
 :pushpin: _It was built as the basis for the idea of a cross-compatible Flutter plugin for both TensorFlow and PyTorch and now it becomes the very foundation by which the plugin will be developed_
 
-[^1]: [Neuron app (and plugin) explained](https://neurify.vercel.app/labs/spark-neuron)
+[^1]: [Neuron app (and plugin) explained](https://neurify.vercel.app/labs/spark_neuron)
 
 The app, in its home widget, has <span style="color: orange;">model cards</span> for tasks such as classification :dog: :cat:, detection :blue_car:, segmentation :ocean:, and more to come.
 
