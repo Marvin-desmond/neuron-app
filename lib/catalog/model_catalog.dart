@@ -161,17 +161,20 @@ class _ModelsInfoCatalogState extends State<ModelsInfoCatalog> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var mlModel in mlModels)
-          ModelInfo(
-            mlModel: mlModel,
-            activeModel: activeModel,
-            setActiveModel: (x) => setActiveModel(x),
-            updateData: () async => await fetchData(),
-            closeProgress: () => closeProgress(),
-          )
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 50.0),
+      child: Column(
+        children: [
+          for (var mlModel in mlModels)
+            ModelInfo(
+              mlModel: mlModel,
+              activeModel: activeModel,
+              setActiveModel: (x) => setActiveModel(x),
+              updateData: () async => await fetchData(),
+              closeProgress: () => closeProgress(),
+            )
+        ],
+      ),
     );
   }
 }
